@@ -90,10 +90,10 @@ class _LoginPageState extends State<LoginPage> {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(color: Colors.blue, borderRadius: BorderRadius.circular(10)),
                     child: Padding(
-                      padding: EdgeInsets.all(10.0),
+                      padding: const EdgeInsets.all(10.0),
                       child: isLoading
-                          ? CircularProgressIndicator()
-                          : Text(
+                          ? const CircularProgressIndicator()
+                          : const Text(
                               "Login",
                               style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                             ),

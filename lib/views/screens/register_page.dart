@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:gap/gap.dart';
 import 'package:lesson66/services/AuthUserFairbases.dart';
-
 
 class RegistPage extends StatefulWidget {
   const RegistPage({super.key});
@@ -11,16 +11,28 @@ class RegistPage extends StatefulWidget {
 }
 
 class _RegistPageState extends State<RegistPage> {
+  bool isLoading = false;
   Authuserfairbases authuserfairbases = Authuserfairbases();
   GlobalKey<FormState> formkey = GlobalKey<FormState>();
+  String? password2;
   String? email;
   String? password;
 
   submit() async {
     if (formkey.currentState!.validate()) {
-      formkey.currentState!.save();
-      await authuserfairbases.register(email: email!, password: password!);
-      Navigator.pop(context);
+      if (password == password2) {
+        setState(() {
+          isLoading = true;
+        });
+        formkey.currentState!.save();
+        await authuserfairbases.register(email: email!, password: password!);
+        setState(() {
+          isLoading = false;
+        });
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("passwordlar bir biriga o'xshamyapti qayta kriting")));
+      }
     }
   }
 
@@ -36,11 +48,13 @@ class _RegistPageState extends State<RegistPage> {
           child: Form(
             key: formkey,
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Icon(
                   Icons.abc,
                 ),
+                const Gap(20),
                 TextFormField(
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
@@ -57,6 +71,7 @@ class _RegistPageState extends State<RegistPage> {
                     email = newValue;
                   },
                 ),
+                const Gap(20),
                 TextFormField(
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
@@ -73,13 +88,41 @@ class _RegistPageState extends State<RegistPage> {
                     password = newValue;
                   },
                 ),
-                FilledButton(
-                  onPressed: submit,
-                  child: const Padding(
-                    padding: EdgeInsets.all(10.0),
-                    child: Text("register"),
+                const Gap(20),
+                TextFormField(
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: "varifaction password",
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'password kriting';
+                    } else {
+                      return null;
+                    }
+                  },
+                  onSaved: (newValue) {
+                    password2 = newValue;
+                  },
+                ),
+                const Gap(20),
+                InkWell(
+                  onTap: submit,
+                  child: Container(
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(color: Colors.blue, borderRadius: BorderRadius.circular(10)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: isLoading
+                          ? const CircularProgressIndicator()
+                          : const Text(
+                              "Login",
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            ),
+                    ),
                   ),
                 ),
+                const Gap(20),
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context);
