@@ -13,26 +13,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   QustionService qustionService = QustionService();
   final PageController _pageController = PageController();
+  int trueAnswers = 0;
   int _currentPage = 0;
-  Map<int, bool> _answeredQuestions = {};
-
-  void _onAnswerSelected(int pageIndex, bool isAnswered) {
-    setState(() {
-      _answeredQuestions[pageIndex] = isAnswered;
-    });
-  }
-
-  void _nextPage() {
-    if (_currentPage < _answeredQuestions.length - 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-      setState(() {
-        _currentPage++;
-      });
-    }
-  }
+  List<List<bool>> userAnswers = [];
 
   @override
   Widget build(BuildContext context) {
@@ -41,67 +24,103 @@ class _HomePageState extends State<HomePage> {
         title: const Text("Product"),
         centerTitle: true,
       ),
-      body: StreamBuilder(
-          stream: qustionService.getQuestion(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            }
+      body: Center(
+        child: StreamBuilder(
+            stream: qustionService.getQuestion(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
 
-            if (snapshot.data == null) {
-              return const Center(
-                child: Text("Mahsulotlar mavjud emas"),
-              );
-            }
+              if (snapshot.data == null) {
+                return const Center(
+                  child: Text("Mahsulotlar mavjud emas"),
+                );
+              }
 
-            final questions = snapshot.data!.docs;
+              final questions = snapshot.data!.docs;
+              userAnswers = List.generate(questions.length, (_) => [false, false, false, false]);
 
-            return Center(
-              child: Column(
-                children: [
-                  Expanded(
-                    child: PageView.builder(
-                      controller: _pageController,
-                      itemCount: questions.length,
-                      onPageChanged: (index) {
-                        setState(() {
-                          _currentPage = index;
-                        });
-                      },
-                      itemBuilder: (context, index) {
-                        final question = Question.fromJson(questions[index]);
-                        return VariantsWidgets(question: question);
-                      },
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: PageView.builder(
+                        controller: _pageController,
+                        itemCount: questions.length,
+                        itemBuilder: (context, index) {
+                          final question = Question.fromJson(questions[index]);
+                          return Column(
+                            children: [
+                              VariantsWidgets(
+                                question: question,
+                                useranswer: (i, value) {
+                                  setState(() {
+                                    userAnswers[index] = [false, false, false, false];
+                                    userAnswers[index][i] = value!;
+                                  });
+                                },
+                                userAnswers: userAnswers[index],
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    if (userAnswers[index].contains(true)) {
+                                      if (userAnswers[index].indexOf(true) == question.answer) {
+                                        trueAnswers++;
+                                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                          content: Text(
+                                            "To'g'ri javob berdingiz",
+                                            style: TextStyle(color: Colors.green),
+                                          ),
+                                        ));
+                                      } else {
+                                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                          content: Text(
+                                            "Xato javob berdingiz",
+                                            style: TextStyle(color: Colors.red),
+                                          ),
+                                        ));
+                                      }
+                                      _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.bounceIn);
+                                      setState(() {});
+                                    }
+                                  },
+                                  child: const Text("Next"),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ElevatedButton(
-                      onPressed: _answeredQuestions[_currentPage] == true ? _nextPage : null,
-                      child: const Text("Next"),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
+                  ],
+                ),
+              );
+            }),
+      ),
     );
   }
 }
 
 class VariantsWidgets extends StatefulWidget {
-  Question question;
-  VariantsWidgets({super.key, required this.question});
+  final Question question;
+  final List<bool> userAnswers;
+  final Function(int, bool?) useranswer;
+
+  VariantsWidgets({super.key, required this.question, required this.useranswer, required this.userAnswers});
 
   @override
   State<VariantsWidgets> createState() => _VariantsWidgetsState();
 }
 
 class _VariantsWidgetsState extends State<VariantsWidgets> {
-  List<bool> useranswer = [false, false, false, false];
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -119,12 +138,9 @@ class _VariantsWidgetsState extends State<VariantsWidgets> {
           Column(
             children: [
               CheckboxListTile(
-                value: useranswer[i],
+                value: widget.userAnswers[i],
                 onChanged: (value) {
-                  setState(() {
-                    useranswer[i] = value!;
-
-                  });
+                  widget.useranswer(i, value);
                 },
                 title: Text(widget.question.variants[i]),
               ),
@@ -133,6 +149,5 @@ class _VariantsWidgetsState extends State<VariantsWidgets> {
           ),
       ],
     );
-    ;
   }
 }
