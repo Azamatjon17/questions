@@ -24,7 +24,15 @@ class _LoginPageState extends State<LoginPage> {
         isLoading = true;
       });
       formkey.currentState!.save();
-      await authuserfairbases.login(email: email!, password: password!);
+      try {
+        await authuserfairbases.login(email: email!, password: password!);
+      } catch (e) {
+        showDialog(
+             context: context,
+            builder: (context) => const AlertDialog(
+                  content: Text("Xato email kiritild"),
+                ));
+      }
       setState(() {
         isLoading = false;
       });

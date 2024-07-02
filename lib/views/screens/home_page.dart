@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:lesson66/models/question.dart';
@@ -23,6 +24,13 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.deepPurple[300],
         title: const Text("Question"),
         centerTitle: true,
+        actions: [
+          IconButton(
+              onPressed: () async {
+                await FirebaseAuth.instance.signOut();
+              },
+              icon: Icon(Icons.logout_rounded))
+        ],
       ),
       body: Center(
         child: StreamBuilder(
@@ -76,6 +84,9 @@ class _QuestionsWidgetState extends State<QuestionsWidget> {
         children: [
           Expanded(
             child: PageView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              padEnds: false,
+              allowImplicitScrolling: true,
               scrollDirection: Axis.vertical,
               controller: _pageController,
               onPageChanged: (value) {
@@ -84,70 +95,78 @@ class _QuestionsWidgetState extends State<QuestionsWidget> {
                   trueAnsevr = false;
                 });
               },
-              itemCount: widget.questions.length,
+              itemCount: widget.questions.length + 1,
               itemBuilder: (context, index) {
-                final question = Question.fromJson(widget.questions[index]);
-                return Stack(
-                  children: [
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          question.question,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            wordSpacing: 2,
-                            letterSpacing: 2,
+                if (index == widget.questions.length) {
+                  return Center(
+                    child: Text(
+                      trueAnswers.toString(),
+                    ),
+                  );
+                } else {
+                  final question = Question.fromJson(widget.questions[index]);
+                  return Stack(
+                    children: [
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            question.question,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              wordSpacing: 2,
+                              letterSpacing: 2,
+                            ),
                           ),
-                        ),
-                        for (int i = 0; i < 4; i++)
-                          Column(
-                            children: [
-                              ListTile(
-                                onTap: () {
-                                  didAnswer = true;
+                          for (int i = 0; i < 4; i++)
+                            Column(
+                              children: [
+                                ListTile(
+                                  onTap: () {
+                                    didAnswer = true;
 
-                                  if (i == question.answer) {
-                                    trueAnsevr = true;
-                                    trueAnswers++;
-                                  } else {
-                                    trueAnsevr = false;
-                                  }
-                                  setState(() {});
-                                  Future.delayed(
-                                    const Duration(seconds: 1),
-                                    () {
-                                      setState(() {
-                                        didAnswer = false;
-                                        trueAnsevr = false;
-                                      });
-                                      _pageController.nextPage(
-                                        duration: const Duration(milliseconds: 700),
-                                        curve: Curves.linear,
-                                      );
-                                    },
-                                  );
-                                },
-                                leading: Text(
-                                  "${userAnswers[i]} :",
-                                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+                                    if (i == question.answer) {
+                                      trueAnsevr = true;
+                                      trueAnswers++;
+                                    } else {
+                                      trueAnsevr = false;
+                                    }
+                                    setState(() {});
+                                    Future.delayed(
+                                      const Duration(seconds: 1),
+                                      () {
+                                        setState(() {
+                                          didAnswer = false;
+                                          trueAnsevr = false;
+                                        });
+                                        _pageController.nextPage(
+                                          duration: const Duration(milliseconds: 700),
+                                          curve: Curves.linear,
+                                        );
+                                      },
+                                    );
+                                  },
+                                  leading: Text(
+                                    "${userAnswers[i]} :",
+                                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+                                  ),
+                                  titleAlignment: ListTileTitleAlignment.center,
+                                  title: Text(question.variants[i]),
                                 ),
-                                titleAlignment: ListTileTitleAlignment.center,
-                                title: Text(question.variants[i]),
-                              ),
-                              const Gap(10),
-                            ],
-                          ),
-                      ],
-                    ),
-                    Visibility(
-                      visible: didAnswer,
-                      child: trueAnsevr ? Lottie.asset("assets/tick.json") : Lottie.asset("assets/error.json"),
-                    ),
-                  ],
-                );
+                                const Gap(10),
+                              ],
+                            ),
+                        ],
+                      ),
+                      Visibility(
+                        visible: didAnswer,
+                        child: trueAnsevr ? Lottie.asset("assets/tick.json") : Lottie.asset("assets/error.json"),
+                      ),
+                    ],
+                  );
+                }
               },
             ),
           ),

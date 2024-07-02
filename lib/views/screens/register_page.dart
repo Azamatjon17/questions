@@ -25,13 +25,25 @@ class _RegistPageState extends State<RegistPage> {
           isLoading = true;
         });
         formkey.currentState!.save();
-        await authuserfairbases.register(email: email!, password: password!);
+        try {
+          await authuserfairbases.register(email: email!, password: password!);
+          Navigator.pop(context);
+        } catch (e) {
+          showDialog(
+              context: context,
+              builder: (context) => const AlertDialog(
+                    content: Text("Xato email kiritild"),
+                  ));
+        }
         setState(() {
           isLoading = false;
         });
-        Navigator.pop(context);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("passwordlar bir biriga o'xshamyapti qayta kriting")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("passwordlar bir biriga o'xshamyapti qayta kriting"),
+          ),
+        );
       }
     }
   }
@@ -116,7 +128,7 @@ class _RegistPageState extends State<RegistPage> {
                       child: isLoading
                           ? const CircularProgressIndicator()
                           : const Text(
-                              "Login",
+                              "Register",
                               style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                             ),
                     ),

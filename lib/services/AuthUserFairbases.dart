@@ -8,14 +8,21 @@ class Authuserfairbases {
     required String email,
     required String password,
   }) async {
-    final user = await firaebase.createUserWithEmailAndPassword(email: email, password: password);
-    print(user.user!.email);
+    try {
+      final user = await firaebase.createUserWithEmailAndPassword(email: email, password: password);
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<void> login({
     required String email,
     required String password,
   }) async {
-    await firaebase.signInWithEmailAndPassword(email: email, password: password);
+    try {
+      await firaebase.signInWithEmailAndPassword(email: email, password: password);
+    } catch (e) {
+      rethrow;
+    }
   }
 }
