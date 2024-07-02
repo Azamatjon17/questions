@@ -30,6 +30,7 @@ class _RegistPageState extends State<RegistPage> {
           Navigator.pop(context);
         } catch (e) {
           showDialog(
+              // ignore: use_build_context_synchronously
               context: context,
               builder: (context) => const AlertDialog(
                     content: Text("Xato email kiritild"),
